@@ -2,6 +2,8 @@
 name = "context_attr"
 version = "0.1.0"
 edition = "2021"
+license = "MIT"
+description = "Attribute macro to add context to all errors a function produces"
 
 [dependencies]
 proc-macro2 = "1.0"
