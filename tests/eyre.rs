@@ -99,4 +99,23 @@ fn struct_method_mut() {
     assert_eq!(err(&result, 1), "Body 43");
 }
 
+#[test]
+fn maintains_visibility() {
+    mod a {
+        pub struct A(pub u32);
+
+        impl A {
+            #[context_attr::eyre(format!("Attribute {}", self.0))]
+            pub fn func(&mut self) -> eyre::Result<()> {
+                self.0 += 1;
+                eyre::bail!("Body {}", self.0);
+            }
+        }
+    }
+
+    let result = a::A(42).func();
+    assert_eq!(err(&result, 0), "Attribute 42");
+    assert_eq!(err(&result, 1), "Body 43");
+}
+
 // TODO(shelbyd): Defer construction of error message only when error actually occurs.

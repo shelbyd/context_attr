@@ -42,10 +42,11 @@ pub fn eyre(attr: TokenStream, item: TokenStream) -> TokenStream {
     };
 
     let block = &input.block;
+    let vis = &input.vis;
 
     // Create the output tokens
     let expanded = quote! {
-        #sig {
+        #vis #sig {
             let message = #do_create;
 
             let mut inner = move || #block;
