@@ -5,14 +5,14 @@ use syn::{parse_macro_input, Expr, ItemFn};
 #[cfg(feature = "anyhow")]
 #[proc_macro_attribute]
 pub fn anyhow(attr: TokenStream, item: TokenStream) -> TokenStream {
-    wrap_with(attr, item, quote! { anyhow::Context })
+    wrap_with(attr, item, quote! { anyhow })
 }
 
 #[allow(unused)]
 fn wrap_with(
     attr: TokenStream,
     item: TokenStream,
-    wrap_with: proc_macro2::TokenStream,
+    crate_: proc_macro2::TokenStream,
 ) -> TokenStream {
     use syn::{punctuated::Punctuated, token::Comma, FnArg};
 
@@ -60,11 +60,11 @@ fn wrap_with(
         #vis #sig {
             let message = #do_create;
 
-            let inner = #inner;
+            let inner: #crate_::Result<_> = #inner;
             match inner {
                 Ok(t) => Ok(t),
                 Err(e) => {
-                    #wrap_with::<_, _>::context(Err(e), message)
+                    #crate_::Context::<_, _>::context(Err(e), message)
                 }
             }
         }
@@ -77,5 +77,5 @@ fn wrap_with(
 #[cfg(feature = "eyre")]
 #[proc_macro_attribute]
 pub fn eyre(attr: TokenStream, item: TokenStream) -> TokenStream {
-    wrap_with(attr, item, quote! { eyre::WrapErr })
+    wrap_with(attr, item, quote! { eyre })
 }

@@ -151,3 +151,17 @@ async fn maintains_async() {
     assert_eq!(err(&result, 0), "Attribute 42");
     assert_eq!(err(&result, 1), "Body 43");
 }
+
+#[test]
+fn allows_question_mark() {
+    fn another() -> eyre::Result<u32> {
+        Ok(43)
+    }
+
+    #[context_attr::eyre(format!("Attribute {n}"))]
+    fn func(n: u32) -> eyre::Result<u32> {
+        Ok(another()?)
+    }
+
+    let _ = func(42);
+}
