@@ -2,12 +2,18 @@ use proc_macro::TokenStream;
 use quote::{quote, ToTokens};
 use syn::{parse_macro_input, Expr, ItemFn};
 
-#[cfg(feature = "eyre")]
-mod eyre;
-
-#[cfg(feature = "eyre")]
+#[cfg(feature = "anyhow")]
 #[proc_macro_attribute]
-pub fn eyre(attr: TokenStream, item: TokenStream) -> TokenStream {
+pub fn anyhow(attr: TokenStream, item: TokenStream) -> TokenStream {
+    wrap_with(attr, item, quote! { anyhow::Context })
+}
+
+#[allow(unused)]
+fn wrap_with(
+    attr: TokenStream,
+    item: TokenStream,
+    wrap_with: proc_macro2::TokenStream,
+) -> TokenStream {
     use syn::{punctuated::Punctuated, token::Comma, FnArg};
 
     let input = parse_macro_input!(item as ItemFn);
@@ -51,11 +57,21 @@ pub fn eyre(attr: TokenStream, item: TokenStream) -> TokenStream {
 
             let mut inner = move || #block;
 
-            let result = inner();
-            eyre::WrapErr::<_, _>::context(result, message)
+            match inner() {
+                Ok(t) => Ok(t),
+                Err(e) => {
+                    #wrap_with::<_, _>::context(Err(e), message)
+                }
+            }
         }
     };
 
     // Convert the quote tokens back into a token stream
     TokenStream::from(expanded)
+}
+
+#[cfg(feature = "eyre")]
+#[proc_macro_attribute]
+pub fn eyre(attr: TokenStream, item: TokenStream) -> TokenStream {
+    wrap_with(attr, item, quote! { eyre::WrapErr })
 }

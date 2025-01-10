@@ -57,14 +57,13 @@ fn closure_does_not_move_arg() {
     }
 }
 
-// TODO(shelbyd): Consider making this work.
-// #[test]
-// fn ignored_arg_in_function() {
-//     #[context_attr::eyre("Attribute")]
-//     fn func(_: u32) -> eyre::Result<()> {
-//         eyre::bail!("Body");
-//     }
-// }
+#[test]
+fn ignored_arg_in_function() {
+    #[context_attr::eyre("Attribute")]
+    fn func(_: u32) -> eyre::Result<()> {
+        eyre::bail!("Body");
+    }
+}
 
 #[test]
 fn struct_method() {
@@ -118,4 +117,33 @@ fn maintains_visibility() {
     assert_eq!(err(&result, 1), "Body 43");
 }
 
-// TODO(shelbyd): Defer construction of error message only when error actually occurs.
+#[test]
+#[ignore]
+fn does_not_construct_if_ok() {
+    struct Panics;
+
+    impl std::fmt::Display for Panics {
+        fn fmt(&self, _: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            panic!("Formatted Panics struct");
+        }
+    }
+
+    #[context_attr::eyre(format!("{panics}"))]
+    fn func(panics: &Panics) -> eyre::Result<()> {
+        eyre::Ok(())
+    }
+
+    let _ = func(&Panics);
+}
+
+#[tokio::test]
+async fn maintains_async() {
+    #[context_attr::eyre(format!("Attribute {n}"))]
+    async fn func(n: u32) -> eyre::Result<()> {
+        eyre::bail!("Body {n}");
+    }
+
+    let result = func(42).await;
+    assert_eq!(err(&result, 0), "Attribute 42");
+    assert_eq!(err(&result, 1), "Body 42");
+}

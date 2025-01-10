@@ -1,6 +1,6 @@
 [package]
 name = "context_attr"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2021"
 license = "MIT"
 description = "Attribute macro to add context to all errors a function produces"
@@ -10,13 +10,20 @@ proc-macro2 = "1.0"
 quote = "1.0"
 syn = { version = "2.0", features = ["full"] }
 
+anyhow = { version = "1.0.95", optional = true }
 eyre = { version = "0.6.12", optional = true }
 
 [features]
 eyre = ["dep:eyre"]
+anyhow = ["dep:anyhow"]
+
 full = [
+  "anyhow",
   "eyre",
 ]
 
 [lib]
 proc-macro = true
+
+[dev-dependencies]
+tokio = { version = "1.43.0", features = ["macros", "rt"] }
