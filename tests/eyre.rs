@@ -138,12 +138,16 @@ fn does_not_construct_if_ok() {
 
 #[tokio::test]
 async fn maintains_async() {
+    async fn another() -> u32 {
+        43
+    }
+
     #[context_attr::eyre(format!("Attribute {n}"))]
     async fn func(n: u32) -> eyre::Result<()> {
-        eyre::bail!("Body {n}");
+        eyre::bail!("Body {}", another().await);
     }
 
     let result = func(42).await;
     assert_eq!(err(&result, 0), "Attribute 42");
-    assert_eq!(err(&result, 1), "Body 42");
+    assert_eq!(err(&result, 1), "Body 43");
 }

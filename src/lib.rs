@@ -50,14 +50,18 @@ fn wrap_with(
     let block = &input.block;
     let vis = &input.vis;
 
+    let inner = match &input.sig.asyncness {
+        Some(_) => quote! { async #block.await },
+        None => quote! { (|| #block)() },
+    };
+
     // Create the output tokens
     let expanded = quote! {
         #vis #sig {
             let message = #do_create;
 
-            let mut inner = move || #block;
-
-            match inner() {
+            let inner = #inner;
+            match inner {
                 Ok(t) => Ok(t),
                 Err(e) => {
                     #wrap_with::<_, _>::context(Err(e), message)
