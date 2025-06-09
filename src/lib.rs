@@ -1,7 +1,40 @@
+//! Add a context to the result returned from the annotated function, regardless of return path.
+//!
+//! ```
+//! #[context_attr::anyhow("Doing thing")]
+//! fn do_thing() -> anyhow::Result<()> {
+//!   if true {
+//!     anyhow::bail!("Can't do thing");
+//!   }
+//!   anyhow::bail!("Another error path");
+//! }
+//! ```
+//!
+//! This is most useful when there are multiple error points in a function, and annotating the context of the function at each point adds too much noise.
+//!
+//! ## Format
+//!
+//! You can call [std::format] to include function arguments in the message.
+//!
+//! ```
+//! #[context_attr::anyhow(format!("The number: {x}"))]
+//! fn add_one(x: u32) -> anyhow::Result<()> { todo!() }
+//! ```
+//!
+//! **Note**: that the format string is eagerly created at the beginning of the function. There currently isn't a way around this, as arguments to the function may be moved.
+//!
+//! ## Works with
+//!
+//! The annotation works with:
+//!
+//! - Async functions
+//! - Functions in impl blocks
+
 use proc_macro::TokenStream;
 use quote::{quote, ToTokens};
 use syn::{parse_macro_input, Expr, ItemFn};
 
+/// Add the provided context to an anyhow::Result.
 #[cfg(feature = "anyhow")]
 #[proc_macro_attribute]
 pub fn anyhow(attr: TokenStream, item: TokenStream) -> TokenStream {
